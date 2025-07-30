@@ -60,7 +60,6 @@
       padding: 10px;
       font-size: 16px;
     }
-    /* Hide original input */
     #fileInput {
       display: none;
     }
@@ -69,16 +68,11 @@
 <body>
   <h2>Image to WebP Converter</h2>
 
-  <!-- Hidden File Input -->
   <input type="file" id="fileInput" multiple accept="image/*">
-
-  <!-- Clickable Drop Area -->
-  <div class="drop-area" id="dropArea">
-    Click or Drag & Drop Images Here
-  </div>
+  <div class="drop-area" id="dropArea">Click or Drag & Drop Images Here</div>
 
   <div id="result"></div>
-  <button id="downloadAll" style="display:none;">Download All as ZIP</button>
+  <button id="downloadAll" disabled>Download All as ZIP</button>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script>
@@ -88,7 +82,6 @@
     const downloadAllBtn = document.getElementById('downloadAll');
     let convertedImages = [];
 
-    // Make drop area open file picker on click
     dropArea.addEventListener('click', () => fileInput.click());
 
     fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
@@ -109,10 +102,6 @@
     });
 
     function handleFiles(files) {
-      result.innerHTML = "";
-      convertedImages = [];
-      downloadAllBtn.style.display = 'none';
-
       [...files].forEach(file => {
         if (!file.type.startsWith('image/')) return;
 
@@ -142,8 +131,9 @@
               `;
               result.appendChild(container);
 
-              if (convertedImages.length === files.length) {
-                downloadAllBtn.style.display = 'inline-block';
+              // Enable button if at least 1 image uploaded
+              if (convertedImages.length > 0) {
+                downloadAllBtn.disabled = false;
               }
             }, 'image/webp', 0.8);
           };
