@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image to WebP Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+    }
+    .drop-area {
+      border: 2px dashed #aaa;
+      padding: 40px 20px;
+      margin-top: 20px;
+      border-radius: 10px;
+      background: #f0f0f0;
+      text-align: center;
+      color: #555;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .drop-area:hover {
+      background: #e0ffe0;
+      border-color: green;
+    }
+    .image-block {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+    .image-block img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border: 1px solid #ccc;
+      margin-right: 10px;
+    }
+    .image-info {
+      display: flex;
+      align-items: center;
+      flex: 1;
+    }
+    button {
+      padding: 6px 10px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover { background: #45a049; }
+    #downloadAll {
+      margin-top: 15px;
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    /* Hide original input */
+    #fileInput {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>Image to WebP Converter</h2>
+
+  <!-- Hidden File Input -->
+  <input type="file" id="fileInput" multiple accept="image/*">
+
+  <!-- Clickable Drop Area -->
+  <div class="drop-area" id="dropArea">
+    Click or Drag & Drop Images Here
+  </div>
+
+  <div id="result"></div>
+  <button id="downloadAll" style="display:none;">Download All as ZIP</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropArea = document.getElementById('dropArea');
+    const result = document.getElementById('result');
+    const downloadAllBtn = document.getElementById('downloadAll');
+    let convertedImages = [];
+
+    // Make drop area open file picker on click
+    dropArea.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+    dropArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropArea.style.borderColor = 'green';
+    });
+
+    dropArea.addEventListener('dragleave', () => {
+      dropArea.style.borderColor = '#aaa';
+    });
+
+    dropArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropArea.style.borderColor = '#aaa';
+      handleFiles(e.dataTransfer.files);
+    });
+
+    function handleFiles(files) {
+      result.innerHTML = "";
+      convertedImages = [];
+      downloadAllBtn.style.display = 'none';
+
+      [...files].forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            canvas.toBlob((blob) => {
+              const webpName = file.name.split('.').slice(0, -1).join('.') + ".webp";
+              convertedImages.push({ name: webpName, blob: blob });
+
+              const url = URL.createObjectURL(blob);
+              const container = document.createElement('div');
+              container.className = 'image-block';
+              container.innerHTML = `
+                <div class="image-info">
+                  <img src="${url}" alt="preview">
+                  <span>${webpName}</span>
+                </div>
+                <button onclick="downloadSingle('${url}','${webpName}')">Download</button>
+              `;
+              result.appendChild(container);
+
+              if (convertedImages.length === files.length) {
+                downloadAllBtn.style.display = 'inline-block';
+              }
+            }, 'image/webp', 0.8);
+          };
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function downloadSingle(url, name) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    window.downloadSingle = downloadSingle;
+
+    downloadAllBtn.addEventListener('click', () => {
+      const zip = new JSZip();
+      convertedImages.forEach(img => {
+        zip.file(img.name, img.blob);
+      });
+      zip.generateAsync({ type: "blob" }).then(content => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(content);
+        a.download = "converted_images.zip";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+    });
+  </script>
+</body>
+</html>
