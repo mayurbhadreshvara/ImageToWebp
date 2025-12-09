@@ -69,7 +69,7 @@
 
   <h2>Image to WebP Converter</h2>
 
-  <!-- ✅ TOTAL COUNT -->
+  <!-- ✅ PERSISTENT TOTAL COUNT -->
   <p><strong>Total Converted Images:</strong> <span id="totalCount">0</span></p>
 
   <input type="file" id="fileInput" multiple accept="image/*">
@@ -84,8 +84,14 @@
     const dropArea = document.getElementById('dropArea');
     const result = document.getElementById('result');
     const downloadAllBtn = document.getElementById('downloadAll');
-    const totalCount = document.getElementById('totalCount'); // ✅ NEW
+    const totalCount = document.getElementById('totalCount');
+
     let convertedImages = [];
+
+    // ✅ LOAD SAVED COUNT FROM localStorage
+    let savedTotal = localStorage.getItem('totalConvertedImages');
+    if (!savedTotal) savedTotal = 0;
+    totalCount.textContent = savedTotal;
 
     dropArea.addEventListener('click', () => fileInput.click());
 
@@ -125,8 +131,10 @@
               const webpName = file.name.split('.').slice(0, -1).join('.') + ".webp";
               convertedImages.push({ name: webpName, blob: blob });
 
-              // ✅ UPDATE TOTAL COUNT
-              totalCount.textContent = convertedImages.length;
+              // ✅ INCREMENT & SAVE TOTAL COUNT
+              savedTotal++;
+              localStorage.setItem('totalConvertedImages', savedTotal);
+              totalCount.textContent = savedTotal;
 
               const url = URL.createObjectURL(blob);
               const container = document.createElement('div');
