@@ -66,7 +66,11 @@
   </style>
 </head>
 <body>
+
   <h2>Image to WebP Converter</h2>
+
+  <!-- ✅ TOTAL COUNT -->
+  <p><strong>Total Converted Images:</strong> <span id="totalCount">0</span></p>
 
   <input type="file" id="fileInput" multiple accept="image/*">
   <div class="drop-area" id="dropArea">Click or Drag & Drop Images Here</div>
@@ -80,6 +84,7 @@
     const dropArea = document.getElementById('dropArea');
     const result = document.getElementById('result');
     const downloadAllBtn = document.getElementById('downloadAll');
+    const totalCount = document.getElementById('totalCount'); // ✅ NEW
     let convertedImages = [];
 
     dropArea.addEventListener('click', () => fileInput.click());
@@ -115,9 +120,13 @@
             canvas.height = img.height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
+
             canvas.toBlob((blob) => {
               const webpName = file.name.split('.').slice(0, -1).join('.') + ".webp";
               convertedImages.push({ name: webpName, blob: blob });
+
+              // ✅ UPDATE TOTAL COUNT
+              totalCount.textContent = convertedImages.length;
 
               const url = URL.createObjectURL(blob);
               const container = document.createElement('div');
@@ -131,7 +140,6 @@
               `;
               result.appendChild(container);
 
-              // Enable button if at least 1 image uploaded
               if (convertedImages.length > 0) {
                 downloadAllBtn.disabled = false;
               }
